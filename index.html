@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AEROMAP - Platform Pemetaan Spasial PM2.5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0e27;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* ========== HERO SECTION WITH SLIDER ========== */
+    .hero-section {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Image Slider */
+    .slider-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .slide.active {
+      opacity: 1;
+    }
+
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(10, 14, 39, 0.85) 0%, rgba(10, 14, 39, 0.6) 100%);
+      z-index: 1;
+    }
+
+    /* Overlay Content */
+    .hero-overlay {
+      position: relative;
+      z-index: 10;
+      height: 90%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .hero-content {
+      max-width: 900px;
+      animation: fadeInUp 1s ease;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 0.5rem 1.5rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-title {
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeInUp 1s ease 0.2s both;
+    }
+
+    .hero-subtitle {
+      font-size: 1.4rem;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 1rem;
+      font-weight: 300;
+      animation: fadeInUp 1s ease 0.4s both;
+    }
+
+    .hero-description {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 3rem;
+      line-height: 1.6;
+      animation: fadeInUp 1s ease 0.6s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 1s ease 0.8s both;
+    }
+
+    .btn {
+      padding: 1rem 2.5rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(59, 130, 246, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Slider Indicators */
+    .slider-indicators {
+      position: absolute;
+      bottom: 3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.75rem;
+      z-index: 20;
+    }
+
+    .indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .indicator.active {
+      width: 40px;
+      border-radius: 6px;
+      background: #3b82f6;
+    }
+
+    /* ========== STATS SECTION ========== */
+    .stats-section {
+      padding: 4rem 2rem;
+      background: rgba(59, 130, 246, 0.1);
+      border-top: 1px solid rgba(59, 130, 246, 0.2);
+      border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 3.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+    }
+
+    /* ========== FEATURES SECTION ========== */
+    .features-section {
+      padding: 6rem 2rem;
+      background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 100%);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-label {
+      color: #3b82f6;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+
+    .section-description {
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.6);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-10px);
+      border-color: rgba(59, 130, 246, 0.3);
+      box-shadow: 0 20px 60px rgba(59, 130, 246, 0.2);
+    }
+
+    .feature-icon {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+    }
+
+    .feature-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .feature-description {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.6;
+    }
+
+    /* ========== MAP SECTION ========== */
+    .map-section {
+      padding: 6rem 2rem;
+      background: #0a0e27;
+    }
+
+    /* Map Controls */
+    .map-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .control-btn, .refresh-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .control-btn:hover, .refresh-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(59, 130, 246, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .control-btn.active {
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      border-color: transparent;
+    }
+
+    /* Map Wrapper */
+    .map-wrapper {
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 1.5rem;
+      margin: 0 auto 5rem auto;  /* Centered + jarak bawah */
+      backdrop-filter: blur(10px);
+      max-width: 750px;  /* ← BATASI LEBAR (sesuaikan: 900px / 1000px / 1200px) */
+    }
+
+        /* Button di Atas Map Wrapper */
+    .map-top-controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      max-width: 480px;
+      flex-wrap: wrap;
+      margin: 0 auto 1.5rem auto;
+    }
+
+    .map-control-btn {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .map-control-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(59, 130, 246, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .map-control-btn.active {
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      border-color: transparent;
+      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Map Canvas */
+    .map-canvas {
+      position: relative;
+      width: 100%;
+      height: 600px;  /* ← BATASI TINGGI (sesuaikan: 400px / 500px / 600px) */
+      background-image: 
+        url('https://www.unpad.ac.id/wp-content/uploads/2013/06/PETA-UNPAD-JATINANGOR-2016-copy.jpg'),
+        linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+      background-size: cover, 50px 50px, 50px 50px;
+      background-position: 30% 20%, 0 0, 0 0;
+      background-repeat: no-repeat, repeat, repeat;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* Sesuaikan posisi marker dengan lokasi Bandung REAL */
+    .sensor-marker.good[style*="25%"] { top: 11% !important; left: 31% !important; } /* Komplek Rektorat */
+    .sensor-marker.good[style*="30%"] { bottom: 68% !important; left: 18% !important; } /* FPIK */
+    .sensor-marker.moderate[style*="20%"] { top: 55% !important; left: 18% !important; } /* FAPERTA */
+    .sensor-marker.moderate[style*="40%"] { bottom: 60% !important; left: 40% !important; } /* PPBS-FMIPA */
+    .sensor-marker.good[style*="70%"] { top: 29% !important; left: 75% !important; } /* Bale Wilasa */
+    .sensor-marker.unhealthy[style*="60%"] { top: 62% !important; left: 55% !important; } /* Bandung Selatan */
+    .sensor-marker.hazardous[style*="45%"] { top: 72% !important; left: 45% !important; } /* Kawasan Industri */
+
+
+    /* Sensor Markers */
+    .sensor-marker {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 100;
+      animation: markerPulse 2s infinite;
+      transition: z-index 0s;
+    }
+
+    @keyframes markerPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    .marker-pin {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .sensor-marker.good .marker-pin {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+    }
+
+    .sensor-marker.moderate .marker-pin {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+    }
+
+    .sensor-marker.unhealthy .marker-pin {
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+    }
+
+    .sensor-marker.hazardous .marker-pin {
+      background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
+    }
+
+    /* Marker Tooltip - Muncul di KANAN */
+    .marker-tooltip {
+      position: absolute;
+      bottom: auto;           /* ← HAPUS bottom */
+      top: 50%;               /* ← TAMBAH: posisi vertikal tengah */
+      left: 50px;             /* ← UBAH: jarak dari kiri marker (45px dari pin) */
+      transform: translateY(-50%) scale(0);  /* ← UBAH: center vertikal + scale */
+      background: rgba(10, 14, 39, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      min-width: 180px;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      opacity: 0;
+    }
+
+    .sensor-marker:hover .marker-tooltip {
+      transform: translateX(-50%) scale(1);
+      opacity: 1;
+    }
+
+    .tooltip-header {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .tooltip-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+    }
+
+    .tooltip-value.good { color: #10b981; }
+    .tooltip-value.moderate { color: #f59e0b; }
+    .tooltip-value.unhealthy { color: #ef4444; }
+    .tooltip-value.hazardous { color: #7c3aed; }
+
+    .tooltip-status {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Map Legend */
+    .map-legend {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      background: rgba(10, 14, 39, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 1.5rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      min-width: 250px;
+    }
+
+    .legend-title {
+      font-weight: 700;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .legend-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .legend-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-dot.good { background: #10b981; }
+    .legend-dot.moderate { background: #f59e0b; }
+    .legend-dot.unhealthy { background: #ef4444; }
+    .legend-dot.hazardous { background: #7c3aed; }
+
+    .legend-text {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Locations Grid */
+    .locations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .location-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .location-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .location-card.good::before { background: #10b981; }
+    .location-card.moderate::before { background: #f59e0b; }
+    .location-card.unhealthy::before { background: #ef4444; }
+    .location-card.hazardous::before { background: #7c3aed; }
+
+    .location-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .location-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .location-icon {
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .location-info h4 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .location-info p {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .location-stats {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-pm {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 12px;
+    }
+
+    .stat-pm .stat-value {
+      font-size: 2.5rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .location-card.good .stat-pm .stat-value { color: #10b981; }
+    .location-card.moderate .stat-pm .stat-value { color: #f59e0b; }
+    .location-card.unhealthy .stat-pm .stat-value { color: #ef4444; }
+    .location-card.hazardous .stat-pm .stat-value { color: #7c3aed; }
+
+    .stat-unit {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 0.25rem;
+    }
+
+    .stat-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-badge.good { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .status-badge.moderate { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .status-badge.unhealthy { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .status-badge.hazardous { background: rgba(124, 58, 237, 0.2); color: #7c3aed; }
+
+    /* Mini Chart */
+    .location-trend {
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .trend-label {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 0.75rem;
+    }
+
+    .mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+      height: 50px;
+    }
+
+    .chart-bar {
+      flex: 1;
+      background: linear-gradient(to top, rgba(59, 130, 246, 0.8), rgba(139, 92, 246, 0.8));
+      border-radius: 4px 4px 0 0;
+      transition: all 0.3s ease;
+    }
+
+    .chart-bar:hover {
+      background: linear-gradient(to top, rgba(59, 130, 246, 1), rgba(139, 92, 246, 1));
+    }
+
+    /* ========== ANIMATIONS ========== */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2.5rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.1rem;
+      }
+
+      .hero-description {
+        font-size: 1rem;
+      }
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .stat-value {
+        font-size: 2.5rem;
+      }
+
+      .map-canvas {
+        height: 350px;
+      }
+      
+      .map-legend {
+        position: static;
+        margin-top: 1.5rem;
+      }
+      
+      .location-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ==========================================
+       TECHNOLOGY SHOWCASE SECTION - COMPACT
+       ========================================== */
+    .technology-section {
+      padding: 1rem 2rem;
+      background: linear-gradient(180deg, #1a1f3a 0%, #0a0e27 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .technology-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(59, 130, 246, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 25s linear infinite;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .tech-swiper-container {
+      position: relative;
+      max-width: 650px;
+      margin: 3rem auto 0;
+      padding: 1.5rem 3.5rem;
+    }
+
+    .tech-swiper-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 450px;
+    }
+
+    .tech-card {
+      position: absolute;
+      width: 100%;
+      max-width: 380px;
+      opacity: 0;
+      transform: translateX(100%) scale(0.85);
+      transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      pointer-events: none;
+    }
+
+    .tech-card.active {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      pointer-events: all;
+      z-index: 10;
+    }
+
+    .tech-card.prev {
+      opacity: 0.2;
+      transform: translateX(-120%) scale(0.85);
+    }
+
+    .tech-card.next {
+      opacity: 0.2;
+      transform: translateX(120%) scale(0.85);
+    }
+
+    .tech-card-inner {
+      background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.10) 0%, 
+        rgba(255, 255, 255, 0.05) 100%);
+      backdrop-filter: blur(15px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      padding: 2rem 1.75rem;
+      box-shadow: 
+        0 25px 60px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .tech-card.active .tech-card-inner:hover {
+      transform: translateY(-3px);
+      box-shadow: 
+        0 30px 70px rgba(59, 130, 246, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    /* Image Wrapper - BIGGER */
+    .tech-image-wrapper {
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .tech-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 30px rgba(59, 130, 246, 0.3));
+      transition: all 0.4s ease;
+    }
+
+    .tech-card.active .tech-image {
+      animation: imageFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes imageFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* Tech Name - SMALLER */
+    .tech-name {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+
+    /* Specifications - COMPACT TABLE */
+    .tech-specs {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 1rem 1.25rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .spec-row:last-child {
+      border-bottom: none;
+    }
+
+    .spec-row span:first-child {
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .spec-row span:last-child {
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Navigation Buttons - SMALLER */
+    .tech-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.12) 0%, 
+        rgba(255, 255, 255, 0.06) 100%);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 1.6rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tech-prev {
+      left: 0;
+    }
+
+    .tech-next {
+      right: 0;
+    }
+
+    .tech-nav-btn:hover {
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      border-color: transparent;
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    /* Pagination Dots - SMALLER */
+    .tech-pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-top: 2.5rem;
+    }
+
+    .tech-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .tech-dot.active {
+      width: 35px;
+      border-radius: 5px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+
+    .tech-dot:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.4);
+      transform: scale(1.15);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .tech-swiper-container {
+        padding: 1rem 2.5rem;
+      }
+
+      .tech-card-inner {
+        padding: 1.5rem 1.25rem;
+      }
+
+      .tech-image-wrapper {
+        width: 140px;
+        height: 140px;
+      }
+
+      .tech-name {
+        font-size: 1.3rem;
+      }
+
+      .tech-nav-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero Section with Slider -->
+  <section class="hero-section">
+    <!-- Image Slider -->
+    <div class="slider-container">
+      <div class="slide active" style="background-image: url('https://cdn.sanity.io/images/0vv8moc6/spectroscopy/fdc672ab967549c294c9ffb7264f4cc5110f2872-1224x688.jpg');"></div>
+      <div class="slide" style="background-image: url('https://plus.unsplash.com/premium_photo-1664298311043-46b3814a511f?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8YWlyJTIwcG9sbHV0aW9ufGVufDB8fDB8fHww');"></div>
+      <div class="slide" style="background-image: url('https://www.nps.gov/subjects/air/images/Transport_Graphic_Huge.jpg');"></div>
+      <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1920&q=80');"></div>
+    </div>
+
+    <!-- Hero Content -->
+    <div class="hero-overlay">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span>🌍</span>
+          <span>AIoT Environmental Monitoring</span>
+        </div>
+        
+        <h1 class="hero-title">AEROMAP</h1>
+        
+        <p class="hero-subtitle">
+          Platform Web Pemetaan Spasial PM2.5 Berbasis IoT dan Machine Learning Model
+        </p>
+        
+        <p class="hero-description">
+          Sistem monitoring PM2.5 real-time berbasis IoT dengan enhancement akurasi sensor low-cost menggunakan ensemble Machine Learning untuk analisis kualitas udara kampus yang presisi.
+        </p>
+        
+        <div class="hero-cta">
+          <a href="#features" class="btn btn-primary">
+            <span>Jelajahi Platform</span>
+            <span>→</span>
+          </a>
+          <a href="#mapping" class="btn btn-secondary">
+            <span>📊</span>
+            <span>Lihat Dashboard</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slider Indicators -->
+    <div class="slider-indicators">
+      <div class="indicator active" data-slide="0"></div>
+      <div class="indicator" data-slide="1"></div>
+      <div class="indicator" data-slide="2"></div>
+      <div class="indicator" data-slide="3"></div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value">24/7</div>
+          <div class="stat-label">Real-time Monitoring</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">10+</div>
+          <div class="stat-label">IoT Sensor Nodes</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">95%</div>
+          <div class="stat-label">Prediction Accuracy</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">∞</div>
+          <div class="stat-label">Data Points Analyzed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Fitur Utama</div>
+        <h2 class="section-title">Teknologi Canggih untuk Monitoring Lingkungan</h2>
+        <p class="section-description">
+          Platform terintegrasi dengan berbagai teknologi terkini untuk monitoring
+          dan prediksi kualitas udara yang akurat
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📡</div>
+          <h3 class="feature-title">IoT Sensor Network</h3>
+          <p class="feature-description">
+            Jaringan sensor PM2.5 terdistribusi yang mengumpulkan data kualitas udara 
+            secara real-time dengan akurasi tinggi
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🗺️</div>
+          <h3 class="feature-title">Spatial Mapping</h3>
+          <p class="feature-description">
+            Visualisasi peta interaktif dengan heat map konsentrasi PM2.5 
+            berbasis koordinat geografis yang presisi
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3 class="feature-title">Machine Learning</h3>
+          <p class="feature-description">
+            Model prediksi berbasis ML untuk forecasting kualitas udara 
+            dengan integrasi data cuaca lokal
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title">Analytics Dashboard</h3>
+          <p class="feature-description">
+            Dashboard interaktif dengan visualisasi data real-time, 
+            historical trends, dan predictive analytics
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🌤️</div>
+          <h3 class="feature-title">Weather Integration</h3>
+          <p class="feature-description">
+            Integrasi prediksi cuaca lokal untuk korelasi antara 
+            kondisi meteorologi dan kualitas udara
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔔</div>
+          <h3 class="feature-title">Alert System</h3>
+          <p class="feature-description">
+            Sistem notifikasi otomatis ketika kualitas udara 
+            melampaui threshold berbahaya
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECHNOLOGY SHOWCASE SECTION - COMPACT -->
+  <section id="technology" class="technology-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">⚡ TECHNOLOGY STACK</div>
+        <h2 class="section-title">Teknologi yang Kami Gunakan</h2>
+        <p class="section-description">
+          Hardware dan software modern untuk monitoring PM2.5 yang akurat dan real-time
+        </p>
+      </div>
+
+      <!-- Technology Swiper Container -->
+      <div class="tech-swiper-container">
+        <div class="tech-swiper-wrapper">
+          <!-- Card 1: PM2.5 Sensor -->
+          <div class="tech-card active">
+            <div class="tech-card-inner">
+              <div class="tech-image-wrapper">
+                <img src="IMAGES-AEROMAP/ZH03A-removebg-preview.png" alt="ZH03A Sensor" class="tech-image">
+              </div>
+              <h3 class="tech-name">Winsen ZH03A</h3>
+              <div class="tech-specs">
+                <div class="spec-row">
+                  <span>Range</span>
+                  <span>0-1000 μg/m³</span>
+                </div>
+                <div class="spec-row">
+                  <span>Interface</span>
+                  <span>UART / PWM</span>
+                </div>
+                <div class="spec-row">
+                  <span>Accuracy</span>
+                  <span>±10% @ 100μg/m³</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Microcontroller ESP32 -->
+          <div class="tech-card">
+            <div class="tech-card-inner">
+              <div class="tech-image-wrapper">
+                <img src="IMAGES-AEROMAP/esp-removebg-preview.png" alt="ESP32-S3" class="tech-image">
+              </div>
+              <h3 class="tech-name">ESP32-S3</h3>
+              <div class="tech-specs">
+                <div class="spec-row">
+                  <span>Processor</span>
+                  <span>Dual-core 240MHz</span>
+                </div>
+                <div class="spec-row">
+                  <span>RAM</span>
+                  <span>512KB SRAM</span>
+                </div>
+                <div class="spec-row">
+                  <span>Connectivity</span>
+                  <span>WiFi 6 + BLE 5.0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Single Board Computer -->
+          <div class="tech-card">
+            <div class="tech-card-inner">
+              <div class="tech-image-wrapper">
+                <img src="IMAGES-AEROMAP/raspberry.png" alt="Raspberry Pi 5" class="tech-image">
+              </div>
+              <h3 class="tech-name">Raspberry Pi 5</h3>
+              <div class="tech-specs">
+                <div class="spec-row">
+                  <span>CPU</span>
+                  <span>Quad-core 2.4GHz</span>
+                </div>
+                <div class="spec-row">
+                  <span>RAM</span>
+                  <span>4GB / 8GB</span>
+                </div>
+                <div class="spec-row">
+                  <span>OS</span>
+                  <span>Raspberry Pi OS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Backend Stack -->
+          <div class="tech-card">
+            <div class="tech-card-inner">
+              <div class="tech-image-wrapper">
+                <img src="IMAGES-AEROMAP/NODEJS-3D-removebg-preview.png" alt="Node.js" class="tech-image">
+              </div>
+              <h3 class="tech-name">Node.js + Express</h3>
+              <div class="tech-specs">
+                <div class="spec-row">
+                  <span>Runtime</span>
+                  <span>Node.js v20 LTS</span>
+                </div>
+                <div class="spec-row">
+                  <span>Framework</span>
+                  <span>Express.js 4.x</span>
+                </div>
+                <div class="spec-row">
+                  <span>Protocol</span>
+                  <span>REST + WebSocket</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5: Database -->
+          <div class="tech-card">
+            <div class="tech-card-inner">
+              <div class="tech-image-wrapper">
+                <img src="IMAGES-AEROMAP/mongoDB__1_-removebg-preview.png" alt="MongoDB" class="tech-image">
+              </div>
+              <h3 class="tech-name">MongoDB</h3>
+              <div class="tech-specs">
+                <div class="spec-row">
+                  <span>Type</span>
+                  <span>Document DB</span>
+                </div>
+                <div class="spec-row">
+                  <span>Indexing</span>
+                  <span>Time-series optimized</span>
+                </div>
+                <div class="spec-row">
+                  <span>Replication</span>
+                  <span>Replica Set</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 6: Machine Learning -->
+          <div class="tech-card">
+            <div class="tech-card-inner">
+              <div class="tech-image-wrapper">
+                <img src="IMAGES-AEROMAP/python3D-removebg-preview.png" alt="Python ML" class="tech-image">
+              </div>
+              <h3 class="tech-name">Python Machine Learning</h3>
+              <div class="tech-specs">
+                <div class="spec-row">
+                  <span>Language</span>
+                  <span>Python 3.11</span>
+                </div>
+                <div class="spec-row">
+                  <span>Models</span>
+                  <span>RF + XGBoost</span>
+                </div>
+                <div class="spec-row">
+                  <span>Accuracy</span>
+                  <span>95%+</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <button class="tech-nav-btn tech-prev" aria-label="Previous">
+          <span>‹</span>
+        </button>
+        <button class="tech-nav-btn tech-next" aria-label="Next">
+          <span>›</span>
+        </button>
+
+        <!-- Pagination Dots -->
+        <div class="tech-pagination">
+          <span class="tech-dot active" data-index="0"></span>
+          <span class="tech-dot" data-index="1"></span>
+          <span class="tech-dot" data-index="2"></span>
+          <span class="tech-dot" data-index="3"></span>
+          <span class="tech-dot" data-index="4"></span>
+          <span class="tech-dot" data-index="5"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Map Section -->
+  <section id="mapping" class="map-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Live Monitoring</div>
+        <h2 class="section-title">Pemetaan Real-Time Kualitas Udara</h2>
+        <p class="section-description">
+          Visualisasi spasial konsentrasi PM2.5 Real-Time menggunakan AIoT dengan enhancement data sensor melalui model Machine Learning
+        </p>
+      </div>
+
+      <div class="map-top-controls">
+        <button class="map-control-btn active">
+          <span>🔥</span>
+          <span>Heatmap View</span>
+        </button>
+        <button class="map-control-btn">
+          <span>🗄️</span>
+          <span>Access Database Monitoring</span>
+        </button>
+      </div>
+
+
+      <!-- Main Map Container -->
+      <div class="map-wrapper">
+        <!-- Map Canvas -->
+        <div id="mainMap" class="map-canvas">
+          <!-- Sensor Markers -->
+          <div class="sensor-marker good" style="bottom: 68%; left: 18%;" data-location="FPIK" data-pm25="15">
+            <div class="marker-pin"></div>
+            <div class="marker-tooltip">
+              <div class="tooltip-header">FPIK</div>
+              <div class="tooltip-value good">15 μg/m³</div>
+              <div class="tooltip-status">Baik</div>
+            </div>
+          </div>
+
+          <div class="sensor-marker moderate" style="bottom: 60%; left: 40%;" data-location="PPBS-FMIPA" data-pm25="45">
+            <div class="marker-pin"></div>
+            <div class="marker-tooltip">
+              <div class="tooltip-header">PPBS-FMIPA</div>
+              <div class="tooltip-value moderate">45 μg/m³</div>
+              <div class="tooltip-status">Sedang</div>
+            </div>
+          </div>
+
+          <div class="sensor-marker unhealthy" style="top: 65%; left: 60%;" data-location="FH" data-pm25="78">
+            <div class="marker-pin"></div>
+            <div class="marker-tooltip">
+              <div class="tooltip-header">FH</div>
+              <div class="tooltip-value unhealthy">78 μg/m³</div>
+              <div class="tooltip-status">Tidak Sehat</div>
+            </div>
+          </div>
+
+          <div class="sensor-marker good" style="bottom: 29%; left: 75%;" data-location="Bale Wilasa" data-pm25="22">
+            <div class="marker-pin"></div>
+            <div class="marker-tooltip">
+              <div class="tooltip-header">Bale Wilasa</div>
+              <div class="tooltip-value good">22 μg/m³</div>
+              <div class="tooltip-status">Baik</div>
+            </div>
+          </div>
+
+          <div class="sensor-marker moderate" style="top: 55%; left: 30%;" data-location="FAPERTA" data-pm25="52">
+            <div class="marker-pin"></div>
+            <div class="marker-tooltip">
+              <div class="tooltip-header">FAPERTA</div>
+              <div class="tooltip-value moderate">52 μg/m³</div>
+              <div class="tooltip-status">Sedang</div>
+            </div>
+          </div>
+
+          <div class="sensor-marker hazardous" style="top: 75%; left: 45%;" data-location="FAPSI" data-pm25="125">
+            <div class="marker-pin"></div>
+            <div class="marker-tooltip">
+              <div class="tooltip-header">FAPSI</div>
+              <div class="tooltip-value hazardous">125 μg/m³</div>
+              <div class="tooltip-status">Berbahaya</div>
+            </div>
+          </div>
+
+          <div class="sensor-marker good" style="top: 11%; left: 31%;" data-location="Komplek Rektorat" data-pm25="12">
+            <div class="marker-pin"></div>
+            <div class="marker-tooltip">
+              <div class="tooltip-header">Komplek Rektorat</div>
+              <div class="tooltip-value good">12 μg/m³</div>
+              <div class="tooltip-status">Baik</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Legend -->
+        <div class="map-legend">
+          <div class="legend-title">Status Kualitas Udara (PM2.5)</div>
+          <div class="legend-items">
+            <div class="legend-row">
+              <span class="legend-dot good"></span>
+              <span class="legend-text">Baik (0-50 μg/m³)</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-dot moderate"></span>
+              <span class="legend-text">Sedang (51-100 μg/m³)</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-dot unhealthy"></span>
+              <span class="legend-text">Tidak Sehat (101-150 μg/m³)</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-dot hazardous"></span>
+              <span class="legend-text">Berbahaya (>150 μg/m³)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Details Grid -->
+      <div class="locations-grid">
+        <div class="location-card good">
+          <div class="location-header">
+            <div class="location-icon">📍</div>
+            <div class="location-info">
+              <h4>FPIK</h4>
+              <p>Sensor ID: NODE-001</p>
+            </div>
+          </div>
+          <div class="location-stats">
+            <div class="stat-pm">
+              <div class="stat-value">15</div>
+              <div class="stat-unit">μg/m³</div>
+            </div>
+            <div class="stat-details">
+              <div class="detail-row">
+                <span>Status:</span>
+                <span class="status-badge good">Baik</span>
+              </div>
+              <div class="detail-row">
+                <span>Suhu:</span>
+                <span>24°C</span>
+              </div>
+              <div class="detail-row">
+                <span>Kelembaban:</span>
+                <span>65%</span>
+              </div>
+              <div class="detail-row">
+                <span>Update:</span>
+                <span>2 menit lalu</span>
+              </div>
+            </div>
+          </div>
+          <div class="location-trend">
+            <div class="trend-label">Trend 24 Jam</div>
+            <div class="mini-chart">
+              <div class="chart-bar" style="height: 40%;"></div>
+              <div class="chart-bar" style="height: 55%;"></div>
+              <div class="chart-bar" style="height: 45%;"></div>
+              <div class="chart-bar" style="height: 35%;"></div>
+              <div class="chart-bar" style="height: 50%;"></div>
+              <div class="chart-bar" style="height: 30%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="location-card moderate">
+          <div class="location-header">
+            <div class="location-icon">📍</div>
+            <div class="location-info">
+              <h4>PPBS-FMIPA</h4>
+              <p>Sensor ID: NODE-002</p>
+            </div>
+          </div>
+          <div class="location-stats">
+            <div class="stat-pm">
+              <div class="stat-value">45</div>
+              <div class="stat-unit">μg/m³</div>
+            </div>
+            <div class="stat-details">
+              <div class="detail-row">
+                <span>Status:</span>
+                <span class="status-badge moderate">Sedang</span>
+              </div>
+              <div class="detail-row">
+                <span>Suhu:</span>
+                <span>28°C</span>
+              </div>
+              <div class="detail-row">
+                <span>Kelembaban:</span>
+                <span>70%</span>
+              </div>
+              <div class="detail-row">
+                <span>Update:</span>
+                <span>1 menit lalu</span>
+              </div>
+            </div>
+          </div>
+          <div class="location-trend">
+            <div class="trend-label">Trend 24 Jam</div>
+            <div class="mini-chart">
+              <div class="chart-bar" style="height: 60%;"></div>
+              <div class="chart-bar" style="height: 70%;"></div>
+              <div class="chart-bar" style="height: 65%;"></div>
+              <div class="chart-bar" style="height: 55%;"></div>
+              <div class="chart-bar" style="height: 75%;"></div>
+              <div class="chart-bar" style="height: 80%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="location-card unhealthy">
+          <div class="location-header">
+            <div class="location-icon">📍</div>
+            <div class="location-info">
+              <h4>FH</h4>
+              <p>Sensor ID: NODE-003</p>
+            </div>
+          </div>
+          <div class="location-stats">
+            <div class="stat-pm">
+              <div class="stat-value">78</div>
+              <div class="stat-unit">μg/m³</div>
+            </div>
+            <div class="stat-details">
+              <div class="detail-row">
+                <span>Status:</span>
+                <span class="status-badge unhealthy">Tidak Sehat</span>
+              </div>
+              <div class="detail-row">
+                <span>Suhu:</span>
+                <span>30°C</span>
+              </div>
+              <div class="detail-row">
+                <span>Kelembaban:</span>
+                <span>75%</span>
+              </div>
+              <div class="detail-row">
+                <span>Update:</span>
+                <span>3 menit lalu</span>
+              </div>
+            </div>
+          </div>
+          <div class="location-trend">
+            <div class="trend-label">Trend 24 Jam</div>
+            <div class="mini-chart">
+              <div class="chart-bar" style="height: 80%;"></div>
+              <div class="chart-bar" style="height: 85%;"></div>
+              <div class="chart-bar" style="height: 90%;"></div>
+              <div class="chart-bar" style="height: 75%;"></div>
+              <div class="chart-bar" style="height: 95%;"></div>
+              <div class="chart-bar" style="height: 88%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="location-card hazardous">
+          <div class="location-header">
+            <div class="location-icon">📍</div>
+            <div class="location-info">
+              <h4>FAPSI</h4>
+              <p>Sensor ID: NODE-004</p>
+            </div>
+          </div>
+          <div class="location-stats">
+            <div class="stat-pm">
+              <div class="stat-value">125</div>
+              <div class="stat-unit">μg/m³</div>
+            </div>
+            <div class="stat-details">
+              <div class="detail-row">
+                <span>Status:</span>
+                <span class="status-badge hazardous">Berbahaya</span>
+              </div>
+              <div class="detail-row">
+                <span>Suhu:</span>
+                <span>32°C</span>
+              </div>
+              <div class="detail-row">
+                <span>Kelembaban:</span>
+                <span>80%</span>
+              </div>
+              <div class="detail-row">
+                <span>Update:</span>
+                <span>1 menit lalu</span>
+              </div>
+            </div>
+          </div>
+          <div class="location-trend">
+            <div class="trend-label">Trend 24 Jam</div>
+            <div class="mini-chart">
+              <div class="chart-bar" style="height: 95%;"></div>
+              <div class="chart-bar" style="height: 100%;"></div>
+              <div class="chart-bar" style="height: 98%;"></div>
+              <div class="chart-bar" style="height: 92%;"></div>
+              <div class="chart-bar" style="height: 100%;"></div>
+              <div class="chart-bar" style="height: 97%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Auto Image Slider
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const indicators = document.querySelectorAll('.indicator');
+    const totalSlides = slides.length;
+
+    function showSlide(index) {
+      slides.forEach(slide => slide.classList.remove('active'));
+      indicators.forEach(ind => ind.classList.remove('active'));
+      
+      slides[index].classList.add('active');
+      indicators[index].classList.add('active');
+    }
+
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      showSlide(currentSlide);
+    }
+
+    // Auto advance every 5 seconds
+    setInterval(nextSlide, 5000);
+
+    // Manual indicator click
+    indicators.forEach((indicator, index) => {
+      indicator.addEventListener('click', () => {
+        currentSlide = index;
+        showSlide(currentSlide);
+      });
+    });
+
+    // Smooth scroll for navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Map interactions
+    document.querySelectorAll('.control-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const view = btn.dataset.view;
+        console.log('Switched to:', view);
+      });
+    });
+
+    // Refresh button animation - FIXED WITH NULL CHECK
+    const refreshBtn = document.querySelector('.refresh-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', function() {
+        this.style.transform = 'rotate(360deg)';
+        setTimeout(() => {
+          this.style.transform = 'rotate(0deg)';
+        }, 500);
+        console.log('Refreshing sensor data...');
+      });
+    }
+
+    // Marker click events
+    document.querySelectorAll('.sensor-marker').forEach(marker => {
+      marker.addEventListener('click', function() {
+        const location = this.dataset.location;
+        const pm25 = this.dataset.pm25;
+        console.log(`Location: ${location}, PM2.5: ${pm25} μg/m³`);
+      });
+    });
+
+    // MAP PNG BACKGROUND ENHANCEMENT
+    document.addEventListener('DOMContentLoaded', function() {
+      const mapCanvas = document.getElementById('mainMap');
+      
+      if (mapCanvas) {
+        // Preload map PNG
+        const mapImg = new Image();
+        mapImg.src = 'https://www.unpad.ac.id/wp-content/uploads/2013/06/PETA-UNPAD-JATINANGOR-2016-copy.jpg';
+        mapImg.onload = function() {
+          mapCanvas.style.backgroundImage = `
+            url('${mapImg.src}'),
+            linear-gradient(rgba(59,130,246,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59,130,246,0.08) 1px, transparent 1px)
+          `;
+          console.log('🗺️ Bandung Map PNG Loaded Successfully!');
+        };
+        
+        // Adjust marker positions for real Bandung map
+        const markerPositions = {
+          'Komplek Rektorat': 'top: 11%; left: 31%;',
+          'FPIK': 'bottom: 68%; left: 18%;',
+          'Cimahi': 'top: 52%; left: 16%;',
+          'PPBS-FMIPA': 'bottom: 60%; left: 40%;',
+          'Bale Wilasa': 'bottom: 29%; left: 75%;',
+          'FH': 'top: 64%; left: 58%;',
+          'FAPSI': 'top: 74%; left: 44%;'
+        };
+        
+        document.querySelectorAll('.sensor-marker').forEach(marker => {
+          const location = marker.dataset.location;
+          if (markerPositions[location]) {
+            marker.style.cssText += markerPositions[location];
+          }
+        });
+      }
+    });
+
+    // ========== TECHNOLOGY CAROUSEL - SMOOTH ANIMATION VERSION ==========
+    (function() {
+      console.log('🔥 Tech Carousel Script Loaded!');
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTechCarousel);
+      } else {
+        initTechCarousel();
+      }
+
+      function initTechCarousel() {
+        console.log('🚀 Initializing Tech Carousel...');
+        
+        let currentTechIndex = 0;
+        const techCards = document.querySelectorAll('.tech-card');
+        const techDots = document.querySelectorAll('.tech-dot');
+        const techPrevBtn = document.querySelector('.tech-prev');
+        const techNextBtn = document.querySelector('.tech-next');
+        const totalTechCards = techCards.length;
+
+        console.log('Cards:', techCards.length);
+        console.log('Dots:', techDots.length);
+        console.log('Prev Button:', techPrevBtn);
+        console.log('Next Button:', techNextBtn);
+
+        if (!techCards || totalTechCards === 0) {
+          console.error('❌ Tech cards not found!');
+          return;
+        }
+
+        if (!techPrevBtn || !techNextBtn) {
+          console.error('❌ Navigation buttons not found!');
+          return;
+        }
+
+        console.log('✅ Found', totalTechCards, 'tech cards');
+
+        // Main function - USING CSS CLASSES (smooth animation)
+        function showTechCard(index) {
+          console.log('📍 Switching to card:', index);
+          
+          // Remove all classes
+          techCards.forEach(card => {
+            card.classList.remove('active', 'prev', 'next');
+          });
+          
+          techDots.forEach(dot => {
+            dot.classList.remove('active');
+          });
+          
+          // Set active card
+          techCards[index].classList.add('active');
+          techDots[index].classList.add('active');
+          
+          // Set prev and next cards for smooth animation
+          const prevIndex = (index - 1 + totalTechCards) % totalTechCards;
+          const nextIndex = (index + 1) % totalTechCards;
+          
+          techCards[prevIndex].classList.add('prev');
+          techCards[nextIndex].classList.add('next');
+          
+          console.log('✓ Card', index, 'is now visible');
+        }
+
+        // Next button
+        techNextBtn.addEventListener('click', function(e) {
+          console.log('🔥 NEXT BUTTON CLICKED!');
+          e.preventDefault();
+          e.stopPropagation();
+          currentTechIndex = (currentTechIndex + 1) % totalTechCards;
+          showTechCard(currentTechIndex);
+          console.log('➡️ Next → Card', currentTechIndex);
+        });
+
+        // Previous button
+        techPrevBtn.addEventListener('click', function(e) {
+          console.log('🔥 PREV BUTTON CLICKED!');
+          e.preventDefault();
+          e.stopPropagation();
+          currentTechIndex = (currentTechIndex - 1 + totalTechCards) % totalTechCards;
+          showTechCard(currentTechIndex);
+          console.log('⬅️ Prev → Card', currentTechIndex);
+        });
+
+        // Dot navigation
+        techDots.forEach((dot, index) => {
+          dot.addEventListener('click', function(e) {
+            console.log('🔥 DOT CLICKED!');
+            e.preventDefault();
+            currentTechIndex = index;
+            showTechCard(currentTechIndex);
+            console.log('🔘 Dot', index, 'clicked');
+          });
+        });
+
+        // Auto-swipe every 5 seconds
+        setInterval(function() {
+          currentTechIndex = (currentTechIndex + 1) % totalTechCards;
+          showTechCard(currentTechIndex);
+        }, 5000);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'ArrowLeft') {
+            currentTechIndex = (currentTechIndex - 1 + totalTechCards) % totalTechCards;
+            showTechCard(currentTechIndex);
+            console.log('⬅️ Arrow Left');
+          } else if (e.key === 'ArrowRight') {
+            currentTechIndex = (currentTechIndex + 1) % totalTechCards;
+            showTechCard(currentTechIndex);
+            console.log('➡️ Arrow Right');
+          }
+        });
+
+        // INITIALIZE - Show first card
+        showTechCard(0);
+        console.log('✅ Carousel ready!');
+      }
+    })();
+    </script>
+
+
+</body>
+</html>
